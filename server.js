@@ -9,7 +9,7 @@ app.use(cors()) // prevents CORS errors
 app.use(express.json({extended: false}))
 
 
-// app.use("/api/posts", require("./routes/posts.js"));
+app.use("/api/posts", require("./routes/posts.js"));
 app.use("/api/users", require("./routes/users.js"))
 
 let PORT = process.env.PORT || 5000;

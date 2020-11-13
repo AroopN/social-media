@@ -18,6 +18,110 @@ router.get("/", authentication, async (req, res) => {
   }
 });
 
+router.get("/users", async (req, res) => {
+  try {
+    let users = await User.find().select("-password");
+    res.json(users)
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Server Error");
+  }
+});
+
+router.get("/get_user_by_email/:user_email", async (req, res) => {
+  try {
+    let email = req.params.user_email;
+    let user = await User.findOne({ email }).select("-password");
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Server Error");
+  }
+});
+
+router.get("/get_user_by_id/:user_id", async (req, res) => {
+  try {
+    let userId = req.params.user_id;
+    let user = await User.findById(userId).select("-password");
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Server Error");
+  }
+});
+
+router.put("/search_user", 
+[check("searchTerm", "Invalid search..").not().isEmpty()],
+async (req, res) => {
+  try {
+
+    let {searchTerm} = req.body;
+    let users = await User.find().select("-password");
+    let user = users.filter(
+        (user)=> user.userName.toString().toLowerCase().split(" ").join("") === searchTerm.toString().toLowerCase().split(" ").join("")
+         
+    )
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Server Error");
+  }
+});
+
+router.put(
+  "/change_user_data/:fieldToChange",
+  authentication,
+  [check("newData", "Field cannot be empty").not().isEmpty()],
+  async (req, res) => {
+    try {
+        let errors  = validationResult(req)
+        if (!errors.isEmpty()) {
+          return res.status(400).json({ errors: errors.array() });
+        }
+        let user = await User.findById(req.user.id).select("-password")
+        if (!user){
+            return res.status(404).json("User Not Found")
+        }
+      let fieldToChange = req.params.fieldToChange.toString();
+      let {newData} = req.body
+      user[fieldToChange] = newData.toString();
+      await user.save()
+      res.json(user);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).send("Server Error");
+    }
+  }
+);
+
+router.put(
+  "/change_user_password",
+  authentication,
+  [check("newPassword", "Password should be more than 6 chars").isLength({min: 6})],
+  async (req, res) => {
+    try {
+      let errors = validationResult(req);
+      const {newPassword} = req.body
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+      let user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json("User Not Found");
+      }
+      const salt  = await bcryptjs.genSalt(10)
+      const hashedPassword = await bcryptjs.hash(newPassword, salt)
+      user.password = hashedPassword
+      await user.save()
+      res.json("success!");
+    } 
+    catch (error) {
+      console.error(error);
+      return res.status(500).send("Server Error");
+    }
+  }
+);
+
 router.post(
   "/register",
   [
