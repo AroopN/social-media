@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
-const { use } = require("nconf");
-let userSchema = mongoose.Schema({
-  firstName: {
+
+let UserSchema = mongoose.Schema({
+  name: {
     type: String,
     required: true,
   },
@@ -14,18 +14,18 @@ let userSchema = mongoose.Schema({
     required: true,
     unique: true,
   },
-  password: {
-    type: String,
-    required: true,
-  },
   email: {
     type: String,
     required: true,
     unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
   },
   avatar: {
     type: String,
   },
 });
 
-module.exports = userSchema = mongoose.model("user", userSchema);
+module.exports = UserSchema = mongoose.model("user", UserSchema);
