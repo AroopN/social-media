@@ -7,6 +7,7 @@ const authentication = require("../middleware/authentication");
 const { request } = require("express");
 
 router.get("/posts", async (req, res) => {
+
     try {
         const posts = await Post.find();
         res.json(posts);
@@ -168,13 +169,13 @@ router.put(
             return res.status(400).json({ errors: errors.array() });
         }
         try {
-            let {searchTerm} = req.body
+            let { searchTerm } = req.body
             searchTerm = searchTerm.toString().trim()
             let posts = await Post.find()
-            if(searchTerm==null || searchTerm==""){
+            if (searchTerm == null || searchTerm == "") {
                 res.json(posts)
             }
-            posts = posts.filter((post)=> post.text.toString().toLowerCase().search(searchTerm)!=-1)
+            posts = posts.filter((post) => post.text.toString().toLowerCase().search(searchTerm) != -1)
             res.json(posts);
         } catch (error) {
             console.error(error);
@@ -208,35 +209,35 @@ router.put("/likes/:post_id", authentication, async (req, res) => {
     }
 });
 router.put("/add_comment/:post_id",
-check("commentText", "Comment cannot be empty").not().isEmpty(),
-authentication, async (req, res) => {
-    let errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-        let post = await Post.findById(req.params.post_id);
-        if (!post) {
-            res.status(404).send("Post Not Found");
+    check("commentText", "Comment cannot be empty").not().isEmpty(),
+    authentication, async (req, res) => {
+        let errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
         }
-        let {commentText} = req.body
-        let user = await User.findById(req.user.id.toString())
-        let newComment = {
-            user: user.id,
-            nams : user.firstName + " "+user.lastName,
-            text: commentText,
-            avatar: user.avatar
-        };
-        console.log(req.user);
-        console.log(user.id);
-        post.comments.push(newComment);
-        await post.save();
-        res.json("Comment added!!");
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json("Server Error...");
-    }
-});
+        try {
+            let post = await Post.findById(req.params.post_id);
+            if (!post) {
+                res.status(404).send("Post Not Found");
+            }
+            let { commentText } = req.body
+            let user = await User.findById(req.user.id.toString())
+            let newComment = {
+                user: user.id,
+                nams: user.firstName + " " + user.lastName,
+                text: commentText,
+                avatar: user.avatar
+            };
+            console.log(req.user);
+            console.log(user.id);
+            post.comments.push(newComment);
+            await post.save();
+            res.json("Comment added!!");
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json("Server Error...");
+        }
+    });
 
 
 router.put("/like_comment/:post_id/:comment_id", authentication, async (req, res) => {
@@ -245,7 +246,7 @@ router.put("/like_comment/:post_id/:comment_id", authentication, async (req, res
         if (!post) {
             res.status(404).send("Post Not Found");
         }
-        let comment  = post.comments.find((comm)=> req.params.comment_id.toString() === comm.id.toString())
+        let comment = post.comments.find((comm) => req.params.comment_id.toString() === comm.id.toString())
         if (!comment) {
             res.status(404).send("Comment Not Found");
         }
@@ -269,25 +270,25 @@ router.put("/like_comment/:post_id/:comment_id", authentication, async (req, res
     }
 });
 
-router.delete("/delete_post/:post_id", 
-authentication,
-async(req, res) =>{
-    try {
-        let {post_id} = req.params 
-        let post = await Post.findById(post_id)
-        if (!post){
-            return res.status(404).send("Post not found!!")
+router.delete("/delete_post/:post_id",
+    authentication,
+    async (req, res) => {
+        try {
+            let { post_id } = req.params
+            let post = await Post.findById(post_id)
+            if (!post) {
+                return res.status(404).send("Post not found!!")
+            }
+            if (post.user.toString() != req.user.id.toString()) {
+                // console.log(post.user.toString())
+                return res.status(403).send("Permission denied!!");
+            }
+            post.remove()
+            res.json("Post succesfully deleted!!")
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json("Server Error...");
         }
-        if(post.user.toString() != req.user.id.toString()){
-            // console.log(post.user.toString())
-            return res.status(403).send("Permission denied!!");
-        }
-        post.remove()
-        res.json("Post succesfully deleted!!")
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json("Server Error...");
-    }
-})
+    })
 
 module.exports = router;

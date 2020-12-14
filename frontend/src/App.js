@@ -7,6 +7,10 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import store from "./store"
 import { Provider} from "react-redux"
+import setAuthenticationToken from './middleware/setAuthenticationToken'
+if (localStorage.getItem("token")) {
+    setAuthenticationToken(localStorage.getItem("token"));
+}
 const App = () => {
   return (
       <Router>

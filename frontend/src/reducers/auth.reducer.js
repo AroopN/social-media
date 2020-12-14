@@ -18,7 +18,7 @@ const auth = (state = initialState, action) => {
     const { type, payload } = action;
     switch (type) {
         case AUTH_FORM_SUCCESS:
-            localStorage.setItem("token", payload.token.data);
+            localStorage.setItem("token", payload.token);
             return {
                 ...state,
                 ...payload,
